@@ -2,8 +2,14 @@
 a simple perf test for mongodb
 
 ## Build Project
+build the whole project
 ```shell
 mvn clean install
+```
+
+build a single module
+```shell
+mvn clean install -pl importer
 ```
 
 ## Run Test
