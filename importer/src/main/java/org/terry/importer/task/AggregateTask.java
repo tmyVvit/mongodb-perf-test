@@ -54,7 +54,7 @@ public class AggregateTask implements Task {
     private boolean aggregateTest(MongoCollection<Document> collection) {
         boolean success = true;
         try {
-            Bson match = Aggregates.match(Filters.type("age", "int"));
+            Bson match = Aggregates.match(Filters.type("age", "number"));
             Bson project = Aggregates.project(Projections.include("_id", "age"));
 
             Bson distribution = Aggregates.bucket("$age", Arrays.asList(0, 18, 24, 35, 60, 100), new BucketOptions().defaultBucket("invalid"));
