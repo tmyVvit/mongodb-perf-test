@@ -4,7 +4,8 @@ import java.io.FileInputStream;
 import java.util.Properties;
 import org.terry.common.workload.MultiWorkload;
 import org.terry.common.workload.Workload;
-import org.terry.importer.task.AggregateTask;
+import org.terry.importer.task.AbstractMongoDbTask;
+import org.terry.importer.task.MongoTaskFactory;
 
 public class MongoImporter {
 
@@ -14,6 +15,8 @@ public class MongoImporter {
     private static final String OPERATION_COUNT = "operation.count";
     private static final String BUCKET_SIZE = "bucket.size";
 
+    private static final String TASK_NAME = "task.name";
+
     public static void main(String[] args) {
         Properties prop = new Properties();
         parseArgs(prop, args);
@@ -22,7 +25,8 @@ public class MongoImporter {
         int opCount = Integer.parseInt(prop.getProperty(OPERATION_COUNT, "10"));
         int bucketSize = Integer.parseInt(prop.getProperty(BUCKET_SIZE, "1000"));
 
-        AggregateTask task = new AggregateTask();
+        String taskName = prop.getProperty(TASK_NAME);
+        AbstractMongoDbTask task = MongoTaskFactory.newTask(taskName);
         task.init(prop);
         Workload workload;
         if (thread > 1) {

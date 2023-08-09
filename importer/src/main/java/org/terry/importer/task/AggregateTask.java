@@ -1,8 +1,6 @@
 package org.terry.importer.task;
 
 import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
@@ -14,41 +12,13 @@ import java.util.Arrays;
 import java.util.Properties;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.terry.common.task.Task;
 
-public class AggregateTask implements Task {
+public class AggregateTask extends AbstractMongoDbTask {
 
-    public static final String MONGODB = "mongodb";
-
-    public static final String URI_PROP = MONGODB + ".uri";
-
-    public static final String DATABASE_PROP = MONGODB + ".database";
-
-    public static final String COLLECTION_PROP = MONGODB + ".collection";
-
-    public static final String PRINT_RESULT = MONGODB + ".printResult";
-
-    private MongoClient mongoClient;
-
-    private MongoCollection<Document> mongoCollection;
-
-    private boolean printResult = false;
-
-    @Override
-    public void init(Properties properties) {
-        mongoClient = MongoClients.create(properties.getProperty(URI_PROP, "mongodb://127.0.0.1:27017"));
-        String database = properties.getProperty(DATABASE_PROP, "tmy");
-        String collection = properties.getProperty(COLLECTION_PROP, "tmy_coll");
-        mongoCollection = mongoClient.getDatabase(database).getCollection(collection);
-
-        if (properties.containsKey(PRINT_RESULT)) {
-            printResult = Boolean.parseBoolean(properties.getProperty(PRINT_RESULT, "false"));
-        }
-    }
 
     @Override
     public boolean run() {
-        return aggregateTest(mongoCollection);
+        return aggregateTest(getMongoCollection());
     }
 
     private boolean aggregateTest(MongoCollection<Document> collection) {
