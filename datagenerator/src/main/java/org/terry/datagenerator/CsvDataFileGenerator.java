@@ -18,6 +18,14 @@ public class CsvDataFileGenerator {
 
     private final double valueRatio;
 
+    private final boolean headSuffix;
+
+    private final boolean needHead;
+
+    private final String delimiter;
+
+    private static final String DEFAULT_DELIMITER = ",";
+
     private static final String EMPTY = "";
     private static final String KEY_PREFIX = "user";
     private static final String ID = "record_key";
@@ -33,7 +41,10 @@ public class CsvDataFileGenerator {
         int recordCount = 10;
         int start = 0;
         double ratio = 1;
+        boolean needHead = true;
+        String delimiter = DEFAULT_DELIMITER;
         String outputPath = null;
+        boolean headSuffix = false;
         while (idx < args.length) {
             String arg = args[idx];
             if ("-fieldCount".equals(arg)) {
@@ -52,6 +63,16 @@ public class CsvDataFileGenerator {
                     System.err.println("ratio should between (0, 1]");
                     System.exit(1);
                 }
+            } else if ("-headSuffix".equals(arg)) {
+                headSuffix = Boolean.parseBoolean(args[idx + 1]);
+            } else if ("-needHead".equals(arg)) {
+                needHead = Boolean.parseBoolean(args[idx + 1]);
+            } else if ("-delimiter".equals(arg)) {
+                delimiter = args[idx + 1];
+                if (delimiter == null || delimiter.isEmpty()) {
+                    System.err.println("delimiter cannot be empty");
+                    System.exit(1);
+                }
             }
             idx += 2;
         }
@@ -61,36 +82,42 @@ public class CsvDataFileGenerator {
             System.exit(1);
         }
         long startTime = System.currentTimeMillis();
-        CsvDataFileGenerator generator = new CsvDataFileGenerator(fieldCount, fieldValueLength, recordCount, outputPath, start, ratio);
+        CsvDataFileGenerator generator = new CsvDataFileGenerator(fieldCount, fieldValueLength, recordCount, outputPath, start, ratio, headSuffix, needHead, delimiter);
         System.out.println("csv file generating...");
         generator.doGenerate();
         System.out.println("csv file generate done. time cost: " + (System.currentTimeMillis() - startTime));
     }
 
-    public CsvDataFileGenerator(int fieldCount, int fieldValueLength, int recordCount, String outputPath, int startRecord, double valueRatio) {
+    public CsvDataFileGenerator(int fieldCount, int fieldValueLength, int recordCount, String outputPath, int startRecord, double valueRatio, boolean headSuffix, boolean needHead, String delimiter) {
         this.fieldCount = fieldCount;
         this.fieldValueLength = fieldValueLength;
         this.recordCount = recordCount;
         this.outputPath = outputPath;
         this.startRecord = startRecord;
         this.valueRatio = valueRatio;
+        this.headSuffix = headSuffix;
+        this.needHead = needHead;
+        this.delimiter = delimiter;
     }
 
     public void doGenerate() {
         List<String> fieldNames = new ArrayList<>(fieldCount + 1);
         List<String> fieldHeaders = new ArrayList<>(fieldCount + 1);
         fieldNames.add(ID);
-        fieldHeaders.add(ID + ".string()");
+        String idHeader = headSuffix ? ID + ".string()" : ID;
+        fieldHeaders.add(idHeader);
         for (int i = 0; i < fieldCount; i++) {
             String field = "field" + i;
             fieldNames.add(field);
-            fieldHeaders.add(field + ".string()");
+            fieldHeaders.add(field + (headSuffix ? ".string()" : ""));
 
         }
 
         try (BufferedWriter w = new BufferedWriter(new FileWriter(outputPath))){
-            w.write(String.join(",", fieldHeaders));
-            w.newLine();
+            if (needHead) {
+                w.write(String.join(delimiter, fieldHeaders));
+                w.newLine();
+            }
 
             int percent = 0;
             for (int i = 0; i < recordCount; i++) {
@@ -110,7 +137,7 @@ public class CsvDataFileGenerator {
                     }
                     vals.add(val);
                 }
-                w.write(String.join(",", vals));
+                w.write(String.join(delimiter, vals));
                 w.newLine();
 
                 int progress = ((i + 1) * 100) / recordCount;
